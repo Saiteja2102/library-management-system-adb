@@ -9,8 +9,8 @@ export class MailService {
   private transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
+      user: "saitejabatraju@gmail.com",
+      pass: "qvxl ekvq dxjf krfg",
     },
   });
 
@@ -27,6 +27,24 @@ export class MailService {
         <p>We regret to inform you that the book <strong>${bookTitle}</strong> which you had reserved is no longer available as it was marked lost by the borrower.</p>
         <p>A refund of <strong>₹${refundAmount}</strong> is being processed to your account.</p>
         <p>Thank you for your understanding.</p>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
+
+  async sendPasswordResetEmail(email: string) {
+    const resetLink = `http://localhost:3000/forgot_password?email=${encodeURIComponent(email)}`;
+
+    const mailOptions = {
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <p>Hello,</p>
+        <p>We received a request to reset your password.</p>
+        <p>Please click the link below to set a new password:</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>If you did not request this, please ignore this email.</p>
       `,
     };
 

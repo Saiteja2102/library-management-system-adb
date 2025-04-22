@@ -66,9 +66,9 @@ export function Navbar() {
               onChange={(e) => setLocation(e.target.value || null)}
             >
               <option value="">All Locations</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Bangalore">Bangalore</option>
+              <option value="warrensburg">warrensburg</option>
+              <option value="leesummit">leesummit</option>
+              {/* <option value="Bangalore">Bangalore</option> */}
             </select>
           )}
           <a href="/books" className="hover:bg-gray-700 px-3 py-2 rounded flex">

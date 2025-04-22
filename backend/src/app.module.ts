@@ -16,7 +16,7 @@ import { MailModule } from "./mail/mail.module";
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>("MONGODB_URI"),
+        uri: "mongodb+srv://saiteja:Saiteja%402102@cluster0.zdasw.mongodb.net/library-management?retryWrites=true&w=majority",
       }),
       inject: [ConfigService],
     }),

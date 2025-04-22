@@ -11,6 +11,7 @@ import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
 import { User, UserDocument } from "../users/users.schema";
 import { CreateUserDto } from "./create-user.dto";
+import { MailService } from "src/mail/mail.service";
 
 interface JwtUserPayload {
   _id: string;
@@ -25,6 +26,7 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private mailService: MailService, // <== added MailService here
   ) {}
 
   async signup(createUserDto: CreateUserDto) {
@@ -108,5 +110,27 @@ export class AuthService {
       console.error("Error changing password:", error);
       throw new BadRequestException("Failed to change password");
     }
+  }
+
+  // === Forgot Password Flow (No Token) ===
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    await this.mailService.sendPasswordResetEmail(email); 
+  }
+
+  async resetPassword(email: string, newPassword: string): Promise<void> {
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
   }
 }

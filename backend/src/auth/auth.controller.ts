@@ -32,4 +32,11 @@ export class AuthController {
       body.newPassword,
     );
   }
+
+  // ✅ Forgot Password (Send email only — no token, no reset)
+  @Post("forgot-password")
+  async forgotPassword(@Body("email") email: string) {
+    await this.authService.sendPasswordResetEmail(email);
+    return { message: "Password reset link sent to email." };
+  }
 }

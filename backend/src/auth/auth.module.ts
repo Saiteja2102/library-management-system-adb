@@ -7,12 +7,14 @@ import { AuthController } from "./auth.controller";
 import { JwtStrategy } from "./jwt.strategy";
 import { MongooseModule } from "@nestjs/mongoose";
 import { User, UserSchema } from "../users/users.schema";
+import { MailModule } from "src/mail/mail.module";
 
 @Module({
   imports: [
     PassportModule,
     JwtModule.register({ secret: "secret", signOptions: { expiresIn: "7d" } }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

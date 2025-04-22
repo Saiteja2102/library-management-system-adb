@@ -16,6 +16,7 @@ import DigitalResources from "./pages/Digital-Resources";
 import Profile from "./pages/Profile";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ForgotPasswordPage from "./pages/Forgot-Password";
 
 interface DecodedToken {
   role: string;
@@ -60,6 +61,7 @@ export default function App() {
         {/* Routes without Navbar */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot_password" element={<ForgotPasswordPage />} />
         <Route
           path="/admin"
           element={
