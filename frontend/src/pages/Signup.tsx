@@ -93,7 +93,7 @@ const Signup = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500 outline-none"
           >
             <option value="student">Student</option>
-            <option value="librarian">Librarian</option>
+            <option value="librarian">Professor</option>
           </select>
           <button
             type="submit"

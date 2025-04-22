@@ -141,9 +141,8 @@ export function Navbar() {
               onChange={(e) => setLocation(e.target.value || null)}
             >
               <option value="">All Locations</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Bangalore">Bangalore</option>
+              <option value="warrensburg">warrensburg</option>
+              <option value="leesummit">leesummit</option>
             </select>
           )}
 

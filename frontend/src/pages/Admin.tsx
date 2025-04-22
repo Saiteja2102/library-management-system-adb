@@ -180,10 +180,9 @@ export default function AdminDashboard() {
                 setNewBook({ ...newBook, location: e.target.value })
               }
             >
-              <option value="">Select Location</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Bangalore">Bangalore</option>
+              <option value="">All Locations</option>
+              <option value="warrensburg">warrensburg</option>
+              <option value="leesummit">leesummit</option>
             </select>
             <input
               className="border p-2"
@@ -191,6 +190,18 @@ export default function AdminDashboard() {
               value={newBook.bookId}
               onChange={(e) =>
                 setNewBook({ ...newBook, bookId: e.target.value })
+              }
+            />
+            <input
+              className="border p-2"
+              type="number"
+              placeholder="Cost"
+              value={newBook.cost}
+              onChange={(e) =>
+                setNewBook({
+                  ...newBook,
+                  cost: parseFloat(e.target.value),
+                })
               }
             />
           </div>
@@ -323,7 +334,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-700">
                   <p>Resource ID: {res.resourceId}</p>
                   <p>Category: {res.category}</p>
-                  <p>Cost: ₹{res.cost}</p>
+                  <p>Cost: ${res.cost}</p>
                 </div>
               </li>
             ))}

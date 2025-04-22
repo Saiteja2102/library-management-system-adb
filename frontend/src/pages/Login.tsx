@@ -13,10 +13,10 @@ interface DecodedToken {
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -40,30 +40,29 @@ export default function Login() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!email || !oldPassword || !newPassword || !confirmPassword) {
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+    setLoading(true); // Start loading
+    if (!email) {
       toast.error("Please fill in all fields.");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
+      setLoading(false); // Stop loading on validation error
       return;
     }
 
     try {
-      await axios.patch("http://localhost:3001/auth/change-password", {
-        email,
-        oldPassword,
-        newPassword,
-      });
-      toast.success("Password changed successfully!");
-      setShowChangePassword(false);
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err) {
-      toast.error("Failed to change password");
+      const response = await axios.post(
+        "http://localhost:3001/auth/forgot-password",
+        { email }
+      );
+      setMessage(
+        response.data.message || "Check your email for the reset link."
+      );
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false); // Stop loading in both success/failure
     }
   };
 
@@ -120,7 +119,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <input
+            {/* <input
               type="password"
               placeholder="Old Password"
               className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -140,16 +139,56 @@ export default function Login() {
               className="w-full mb-6 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+            /> */}
             <button
               onClick={handleChangePassword}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-300 flex justify-center items-center"
+              disabled={loading}
             >
-              Update Password
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8z"
+                  ></path>
+                </svg>
+              ) : (
+                "Send Reset Link"
+              )}
             </button>
+
+            {message && <p style={styles.success}>{message}</p>}
+            {error && <p style={styles.error}>{error}</p>}
           </div>
         )}
       </div>
     </div>
   );
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  success: {
+    color: "green",
+    marginTop: "10px",
+    marginLeft: "80px",
+  },
+  error: {
+    color: "red",
+    marginTop: "10px",
+    marginLeft: "135px",
+  },
+};

@@ -25,7 +25,7 @@ export class MailService {
       html: `
         <p>Hello,</p>
         <p>We regret to inform you that the book <strong>${bookTitle}</strong> which you had reserved is no longer available as it was marked lost by the borrower.</p>
-        <p>A refund of <strong>₹${refundAmount}</strong> is being processed to your account.</p>
+        <p>A refund of <strong>$${refundAmount}</strong> is being processed to your account.</p>
         <p>Thank you for your understanding.</p>
       `,
     };
