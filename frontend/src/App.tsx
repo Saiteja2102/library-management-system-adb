@@ -100,7 +100,7 @@ export default function App() {
           path="/profile"
           element={
             <PrivateRoute
-              allowedRoles={["student", "librarian"]}
+              allowedRoles={["student", "professor"]}
               element={
                 <MainLayout>
                   <Profile />

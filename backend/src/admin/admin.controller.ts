@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Patch
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { CreateBookDto } from "src/books/books.dto";
@@ -14,6 +15,11 @@ import { CreateDigitalResourceDto } from "src/digital-resources/digital-resource
 @Controller("admin")
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  @Get("user-activity")
+   async getUserActivity() {
+     return await this.adminService.getUserActivity();
+   }
 
   @Post("create-book")
   createBook(@Body() body: CreateBookDto) {
@@ -57,4 +63,10 @@ export class AdminController {
   getDigitalResources() {
     return this.adminService.getAllDigitalResources();
   }
+
+  @Patch("books/:id/add-copy")
+addBookCopy(@Param("id") id: string) {
+  return this.adminService.addBookCopy(id);
+}
+
 }

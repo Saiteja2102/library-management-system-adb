@@ -50,4 +50,27 @@ export class MailService {
 
     await this.transporter.sendMail(mailOptions);
   }
+
+  async sendWelcomeEmail(email: string, name: string) {
+    const mailOptions = {
+      to: email,
+      subject: "🎉 Welcome to the Library Management System!",
+      html: `
+        <div style="font-family: sans-serif; color: #333;">
+          <h2>Hi ${name},</h2>
+          <p>Welcome to our Library Management System!!!</p>
+          <img 
+            src="https://raw.githubusercontent.com/Saiteja2102/library-management-system-adb/refs/heads/main/welcome.gif" 
+            alt="Welcome" 
+            style="max-width: 100%; border-radius: 10px; margin: 20px 0;"
+          />
+          <p>Explore a wide collection of books and digital resources now available to you.</p>
+          <p>Happy Reading! 📚</p>
+          <p style="margin-top: 20px;">– Library Management Team</p>
+        </div>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
 }

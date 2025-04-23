@@ -29,8 +29,14 @@ export class UsersService {
     return this.userModel.find().select("-password");
   }
 
+  async updateUser(userId: string, updateDto: any) {
+    return this.userModel.findByIdAndUpdate(userId, updateDto, { new: true }).select("-password");
+  }
+  
   async getUserBooks(userId: string | Types.ObjectId) {
     const objectUserId = new Types.ObjectId(userId);
+
+    const user = await this.findById(objectUserId.toString());
 
     await this.statusCheckService.updateBookStatuses();
     await this.statusCheckService.updateDigitalResourceStatuses();
@@ -58,7 +64,15 @@ export class UsersService {
       },
     });
 
-    return { borrowedBooks, reservedBooks, lostBooks, borrowedEBooks };
+    return {
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      borrowedBooks,
+      reservedBooks,
+      lostBooks,
+      borrowedEBooks,
+    };
   }
 
   async getStats() {

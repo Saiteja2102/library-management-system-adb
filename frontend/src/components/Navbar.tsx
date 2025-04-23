@@ -44,7 +44,7 @@ export function Navbar() {
 
   // Check if current path is '/profile' or '/books' to conditionally show the location select
   const showLocationSelect =
-    currentPath === "/profile" || currentPath === "/books";
+    currentPath === "/books";
 
   return (
     <nav className="bg-gray-800 text-white">

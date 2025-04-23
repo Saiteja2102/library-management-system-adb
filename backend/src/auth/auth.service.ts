@@ -45,6 +45,7 @@ export class AuthService {
       });
 
       const user = await createdUser.save();
+      await this.mailService.sendWelcomeEmail(user.email, user.name);
       const payload: JwtUserPayload = {
         _id: user._id.toString(),
         role: user.role,
@@ -55,6 +56,7 @@ export class AuthService {
       return this.login(payload);
     } catch (error) {
       console.log("Error:", error);
+      throw error; // ✅ re-throw the actual error
     }
   }
 
@@ -120,7 +122,7 @@ export class AuthService {
       throw new NotFoundException("User not found");
     }
 
-    await this.mailService.sendPasswordResetEmail(email); 
+    await this.mailService.sendPasswordResetEmail(email);
   }
 
   async resetPassword(email: string, newPassword: string): Promise<void> {

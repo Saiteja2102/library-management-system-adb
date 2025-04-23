@@ -9,7 +9,7 @@ import {
 export enum UserRole {
   ADMIN = "admin",
   STUDENT = "student",
-  LIBRARIAN = "librarian",
+  PROFESSOR = "professor",
 }
 
 export class CreateUserDto {
@@ -22,7 +22,7 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 
-  @IsEnum(UserRole, { message: "role must be admin, student, or librarian" })
+  @IsEnum(UserRole, { message: "role must be admin, student, or professor" })
   role: UserRole;
 
   @IsNotEmpty()

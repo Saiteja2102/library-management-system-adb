@@ -43,7 +43,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-r from-purple-400 to-blue-500 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
           Create Account
@@ -93,7 +93,7 @@ const Signup = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500 outline-none"
           >
             <option value="student">Student</option>
-            <option value="librarian">Professor</option>
+            <option value="professor">Professor</option>
           </select>
           <button
             type="submit"

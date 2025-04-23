@@ -102,12 +102,12 @@ export default function Login() {
         </p>
 
         {/* Change Password Toggle */}
-        <p
+        {/* <p
           className="text-sm text-center text-blue-600 hover:underline mt-4 cursor-pointer"
           onClick={() => setShowChangePassword(!showChangePassword)}
         >
           {showChangePassword ? "Hide" : "Forgot Password?"}
-        </p>
+        </p> */}
 
         {/* Change Password Section */}
         {showChangePassword && (

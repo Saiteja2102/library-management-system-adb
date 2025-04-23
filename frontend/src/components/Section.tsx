@@ -145,7 +145,7 @@ export function Section({
               <p className="text-sm text-gray-600 mb-1">by {book.author}</p>
               <p className="text-sm mb-1">Category: {book.category}</p>
               {type === "ebook" ? (
-                <p className="text-sm mb-1">Cost: {book.cost}</p>
+                <p className="text-sm mb-1">Price: ${book.cost}</p>
               ) : (
                 <p className="text-sm mb-1">Location: {book.location}</p>
               )}
@@ -289,7 +289,7 @@ export function Section({
               </button>
             </div>
             <iframe
-              src="/sample.pdf"
+              src="/sample.pdf#toolbar=0"
               className="flex-1 w-full border rounded"
               title="PDF Preview"
             ></iframe>

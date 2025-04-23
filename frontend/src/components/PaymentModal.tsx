@@ -48,7 +48,7 @@ export default function PaymentModal({
   }, []);
 
   const getTitle = () => {
-    if (role === "librarian") {
+    if (role === "professor") {
       switch (actionType) {
         case "lost":
           return "Confirm Mark as Lost";
@@ -72,7 +72,7 @@ export default function PaymentModal({
   };
 
   const getSubtitle = () => {
-    if (role === "librarian") {
+    if (role === "professor") {
       switch (actionType) {
         case "lost":
           return "Confirm to mark the book as lost";
@@ -85,7 +85,7 @@ export default function PaymentModal({
     } else {
       switch (actionType) {
         case "lost":
-          return "Pay to mark your book as lost";
+          return "Pay $200 to mark your book as lost";
         case "renew":
           return "Complete to renew your book";
         case "borrow":
@@ -96,8 +96,8 @@ export default function PaymentModal({
   };
 
   const handlePay = () => {
-    // Skip validation if librarian (except lost)
-    if (role !== "librarian") {
+    // Skip validation if professor (except lost)
+    if (role !== "professor") {
       const newErrors: Record<string, string> = {};
       if (!cardNumber.trim()) newErrors.cardNumber = "Card number is required.";
       if (!cardName.trim()) newErrors.cardName = "Name on card is required.";
@@ -134,7 +134,7 @@ export default function PaymentModal({
           <div className="flex justify-center items-center py-8">
             <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : role === "librarian" && actionType !== "lost" ? (
+        ) : role === "professor" && actionType !== "lost" ? (
           <>
             <button
               onClick={handlePay}

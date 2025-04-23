@@ -10,7 +10,12 @@ export default function Profile() {
   const [reservedBooks, setReservedBooks] = useState<any[]>([]);
   const [borrowedEBooks, setBorrowedEBooks] = useState<any[]>([]);
   const [lostBooks, setLostBooks] = useState<any[]>([]);
-
+  const [userDetails, setUserDetails] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [disabledLost, setDisabledLost] = useState<string[]>([]);
 
@@ -23,6 +28,14 @@ export default function Profile() {
       try {
         const res = await axios.get(`http://localhost:3001/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log(res);
+        
+        setUserDetails({
+          name: res.data.name,
+          email: res.data.email,
+          mobile: res.data.mobile,
         });
 
         setBorrowedBooks(res.data.borrowedBooks || []);
@@ -74,6 +87,79 @@ export default function Profile() {
 
   return (
     <div className="p-6">
+      <div className="mb-8 bg-white rounded shadow p-4 max-w-lg">
+  <h3 className="text-lg font-semibold mb-4">👤 Personal Information</h3>
+  {isEditing ? (
+    <>
+      <input
+        className="w-full mb-2 px-3 py-2 border rounded"
+        placeholder="Name"
+        value={userDetails.name}
+        onChange={(e) =>
+          setUserDetails({ ...userDetails, name: e.target.value })
+        }
+      />
+      <input
+        className="w-full mb-2 px-3 py-2 border rounded"
+        placeholder="Email"
+        value={userDetails.email}
+        onChange={(e) =>
+          setUserDetails({ ...userDetails, email: e.target.value })
+        }
+      />
+      <input
+        className="w-full mb-2 px-3 py-2 border rounded"
+        placeholder="Mobile"
+        value={userDetails.mobile}
+        onChange={(e) =>
+          setUserDetails({ ...userDetails, mobile: e.target.value })
+        }
+      />
+      <div className="flex gap-2">
+        <button
+          onClick={async () => {
+            try {
+              await axios.patch(
+                "http://localhost:3001/users/update-profile",
+                userDetails,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              toast.success("Profile updated!");
+              setIsEditing(false);
+            } catch (err) {
+              toast.error("Failed to update profile.");
+              console.error(err);
+            }
+          }}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Save
+        </button>
+        <button
+          onClick={() => setIsEditing(false)}
+          className="bg-gray-400 text-white px-4 py-2 rounded"
+        >
+          Cancel
+        </button>
+      </div>
+    </>
+  ) : (
+    <>
+      <p className="mb-1"><strong>Name:</strong> {userDetails.name}</p>
+      <p className="mb-1"><strong>Email:</strong> {userDetails.email}</p>
+      <p className="mb-1"><strong>Mobile:</strong> {userDetails.mobile}</p>
+      <button
+        onClick={() => setIsEditing(true)}
+        className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded"
+      >
+        Edit Profile
+      </button>
+    </>
+  )}
+</div>
+
       <h2 className="text-2xl font-semibold mb-6">📚 My Book Profile</h2>
 
       <Section

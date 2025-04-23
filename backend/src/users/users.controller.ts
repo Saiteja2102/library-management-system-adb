@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Req } from "@nestjs/common";
+import { Controller, Get, Param, UseGuards, Req,Patch,Body } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { JwtAuthGuard } from "src/auth/jwt.auth.guard";
 import { AuthenticatedRequest } from "src/common/common.types";
@@ -29,5 +29,14 @@ export class UsersController {
   @Get(":id")
   async getOne(@Param("id") id: string) {
     return this.usersService.findById(id);
+  }
+
+  @Patch("update-profile")
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @Req() req: AuthenticatedRequest,
+    @Body() updateDto: any,
+  ) {
+    return this.usersService.updateUser(req.user._id.toString(), updateDto);
   }
 }

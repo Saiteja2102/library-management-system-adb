@@ -4,9 +4,12 @@ import { Book } from "../types/books";
 import { DigitalResource } from "./Digital-Resources";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UserDetails from "./UserDetails";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"books" | "resources">("books");
+  const [activeTab, setActiveTab] = useState<
+    "books" | "resources" | "userDetails"
+  >("books");
 
   const [books, setBooks] = useState<Book[]>([]);
   const [newBook, setNewBook] = useState<Book>({
@@ -59,6 +62,17 @@ export default function AdminDashboard() {
       cost: 0,
     });
     toast.success("Book added successfully!");
+  };
+
+  const addCopy = async (bookId: string) => {
+    try {
+      await axios.patch(`http://localhost:3001/admin/books/${bookId}/add-copy`);
+      fetchBooks();
+      toast.success("New copy added successfully!");
+    } catch (error) {
+      toast.error("Failed to add copy.");
+      console.error(error);
+    }
   };
 
   const addResource = async () => {
@@ -135,6 +149,16 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab("resources")}
         >
           Manage eBooks
+        </button>
+        <button
+          className={`px-4 py-2 rounded font-semibold ${
+            activeTab === "userDetails"
+              ? "bg-purple-600 text-white"
+              : "bg-gray-200"
+          }`}
+          onClick={() => setActiveTab("userDetails")}
+        >
+          User Details
         </button>
       </div>
 
@@ -224,12 +248,20 @@ export default function AdminDashboard() {
                     <strong className="text-lg">{book.title}</strong> by{" "}
                     <span className="text-gray-600">{book.author}</span>
                   </div>
-                  <button
-                    className="text-red-500 hover:underline"
-                    onClick={() => deleteBook(book._id!)}
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      className="text-green-600 hover:underline"
+                      onClick={() => addCopy(book._id!)}
+                    >
+                      Add Copy
+                    </button>
+                    <button
+                      className="text-red-500 hover:underline"
+                      onClick={() => deleteBook(book._id!)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 <div className="text-sm text-gray-700">
                   <p>Book ID: {book.bookId}</p>
@@ -339,6 +371,12 @@ export default function AdminDashboard() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+      {activeTab === "userDetails" && (
+        <section>
+          <h2 className="text-xl font-semibold mb-4">User Details</h2>
+          <UserDetails />
         </section>
       )}
     </div>
