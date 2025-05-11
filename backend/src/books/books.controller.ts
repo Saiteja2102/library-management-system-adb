@@ -27,6 +27,13 @@ export class BooksController {
     return this.booksService.findOne(id);
   }
 
+  @Patch(":id/return")
+  @UseGuards(JwtAuthGuard)
+  requestBookReturn(@Param("id") id: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user._id;
+    return this.booksService.requestReturn(id, userId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post(":id/borrow")
   borrowBook(
@@ -58,6 +65,12 @@ export class BooksController {
   @UseGuards(JwtAuthGuard)
   markBookAsLost(@Param("id") id: string) {
     return this.booksService.markAsLost(id);
+  }
+
+  @Patch(":id/approve-return")
+  @UseGuards(JwtAuthGuard) // Consider admin guard if available
+  approveReturn(@Param("id") id: string) {
+    return this.booksService.approveReturn(id);
   }
 
   @Patch(":id/renew")

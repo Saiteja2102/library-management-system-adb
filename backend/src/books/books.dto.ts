@@ -4,7 +4,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsString,
-  IsNumber 
+  IsNumber,
 } from "class-validator";
 import { AvailabilityStatus } from "./books.schema";
 import { Type } from "class-transformer";
@@ -33,10 +33,22 @@ export class CreateBookDto {
   @IsString()
   @IsNotEmpty()
   location: string;
-  
+
   @IsNumber()
   @IsNotEmpty()
   cost: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  numOfPages: number;
+
+  @IsString()
+  @IsNotEmpty()
+  publishedYear: string;
+
+  // @IsString()
+  // @IsNotEmpty()
+  // image: string;
 
   @IsEnum(AvailabilityStatus)
   status: AvailabilityStatus;

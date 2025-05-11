@@ -7,7 +7,8 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  actionType: "borrow" | "renew" | "lost";
+  actionType: "borrow" | "renew" | "lost" | "fine";
+  amount: number;
 }
 
 interface DecodedToken {
@@ -48,7 +49,7 @@ export default function PaymentModal({
   }, []);
 
   const getTitle = () => {
-    if (role === "professor") {
+    if (role === "professor" || role === "student") {
       switch (actionType) {
         case "lost":
           return "Confirm Mark as Lost";
@@ -72,7 +73,7 @@ export default function PaymentModal({
   };
 
   const getSubtitle = () => {
-    if (role === "professor") {
+    if (role === "professor" || role === "student") {
       switch (actionType) {
         case "lost":
           return "Confirm to mark the book as lost";
@@ -97,25 +98,25 @@ export default function PaymentModal({
 
   const handlePay = () => {
     // Skip validation if professor (except lost)
-    if (role !== "professor") {
-      const newErrors: Record<string, string> = {};
-      if (!cardNumber.trim()) newErrors.cardNumber = "Card number is required.";
-      if (!cardName.trim()) newErrors.cardName = "Name on card is required.";
-      if (!expiry.trim()) newErrors.expiry = "Expiry date is required.";
-      if (!cvv.trim()) newErrors.cvv = "CVV is required.";
+    // if (role === "professor" || role === "student") {
+    //   const newErrors: Record<string, string> = {};
+    //   if (!cardNumber.trim()) newErrors.cardNumber = "Card number is required.";
+    //   if (!cardName.trim()) newErrors.cardName = "Name on card is required.";
+    //   if (!expiry.trim()) newErrors.expiry = "Expiry date is required.";
+    //   if (!cvv.trim()) newErrors.cvv = "CVV is required.";
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
-    }
+    //   if (Object.keys(newErrors).length > 0) {
+    //     setErrors(newErrors);
+    //     return;
+    //   }
+    // }
 
     setErrors({});
     setLoading(true);
 
     setTimeout(() => {
       setLoading(false);
-      toast.success("Payment Successful!");
+      // toast.success("Payment Successful!");
       onClose();
       onSuccess?.();
       navigate("/profile");
@@ -134,12 +135,12 @@ export default function PaymentModal({
           <div className="flex justify-center items-center py-8">
             <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : role === "professor" && actionType !== "lost" ? (
+        ) : role === "professor" || role === "student" && actionType !== "lost" ? (
           <>
             <button
               onClick={handlePay}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded mt-4"
-            >
+            > 
               Confirm
             </button>
             <button

@@ -53,6 +53,15 @@ export class User {
   @Prop({ required: true })
   mobile: string;
 
+  @Prop({ required: true })
+  city: string;
+
+  @Prop({ required: true })
+  state: string;
+
+  @Prop({ required: true })
+  zipcode: string;
+
   @Prop({ type: [UserActivitySchema], default: [] })
   activityHistory: UserActivity[];
 

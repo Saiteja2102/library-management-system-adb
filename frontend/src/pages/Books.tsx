@@ -5,17 +5,29 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PaymentModal from "../components/PaymentModal";
 import { toast } from "react-toastify";
+import { Search } from "lucide-react";
+import { Book } from "../types/books";
 
 export default function Books() {
-  const [books, setBooks] = useState([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedBookForPayment, setSelectedBookForPayment] =
     useState<any>(null);
   const { location } = useLocation();
   const [openPickerFor, setOpenPickerFor] = useState<string | null>(null);
-  const [startDates, setStartDates] = useState<Record<string, Date | null>>({});
   const [endDates, setEndDates] = useState<Record<string, Date | null>>({});
+  const [searchText, setSearchText] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const categoryDurations: Record<string, number> = {
+    "Artificial Intelligence": 7,
+    "Machine Learning": 10,
+    "Data Science": 14,
+    "Big Data": 7,
+    Cybersecurity: 10,
+    "Software Engineering": 7,
+    "Cloud Computing": 10,
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -35,26 +47,31 @@ export default function Books() {
     fetchBooks();
   }, []);
 
-  const filteredBooks = location
-    ? books.filter((book: any) => book.location === location)
-    : books;
+  const filteredBooks = books
+    .filter((book: any) => (location ? book.location === location : true))
+    .filter((book: any) =>
+      selectedCategory ? book.category === selectedCategory : true
+    )
+    .filter((book: any) => {
+      const search = searchText.toLowerCase();
+      return (
+        book.title.toLowerCase().includes(search) ||
+        book.author.toLowerCase().includes(search) ||
+        book.category.toLowerCase().includes(search)
+      );
+    })
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   const submitBooking = async (book: any) => {
-    const startDate = startDates[book._id];
     const endDate = endDates[book._id];
 
-    const now = new Date();
-    let adjustedStart = new Date(startDate!);
-    if (
-      startDate!.toDateString() === now.toDateString() &&
-      adjustedStart.getTime() <= now.getTime()
-    ) {
-      adjustedStart.setHours(now.getHours(), now.getMinutes() + 1, 0, 0);
-    }
+    const isBorrowing = book.status === "available";
+    const adjustedStart = isBorrowing
+      ? new Date(Date.now() + 60 * 1000) // 1 minute in future
+      : new Date(book.endTime); // 👈 for reservation, start after borrow end
 
     try {
       const token = localStorage.getItem("token");
-      const isBorrowing = book.status === "available";
 
       const endpoint = isBorrowing
         ? `http://localhost:3001/books/${book._id}/borrow`
@@ -71,22 +88,16 @@ export default function Books() {
           };
 
       const response = await axios.post(endpoint, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const updatedBook = response.data.updatedBook;
-
       setBooks((prevBooks: any) =>
         prevBooks.map((b: any) => (b._id === updatedBook._id ? updatedBook : b))
       );
 
-      // Show success toast
       toast.success(response.data.message);
-
       setOpenPickerFor(null);
-      setStartDates((prev) => ({ ...prev, [book._id]: null }));
       setEndDates((prev) => ({ ...prev, [book._id]: null }));
     } catch (error: any) {
       console.error(error);
@@ -94,22 +105,29 @@ export default function Books() {
     }
   };
 
-  const validateAndProceedToPayment = (book: any) => {
-    const startDate = startDates[book._id];
-    const endDate = endDates[book._id];
+  const defaultDuration = 7; // fallback
 
-    if (
-      !(startDate instanceof Date) ||
-      isNaN(startDate.getTime()) ||
-      !(endDate instanceof Date) ||
-      isNaN(endDate.getTime())
-    ) {
-      toast.error("Please select valid start and end dates.");
+  const validateAndProceedToPayment = (book: any) => {
+    const categoryDuration =
+      categoryDurations[book.category] || defaultDuration;
+    const isBorrowing = book.status === "available";
+    // const endDate = endDates[book._id];
+    const startDate = new Date();
+    const now = new Date();
+
+    const adjustedStart = isBorrowing
+      ? new Date(now.getTime() + 60 * 1000)
+      : new Date(book.endTime);
+    const endDate = new Date(adjustedStart);
+    endDate.setDate(adjustedStart.getDate() + categoryDuration);
+
+    if (!(endDate instanceof Date) || isNaN(endDate.getTime())) {
+      toast.error("Please select a valid end date.");
       return;
     }
 
     if (endDate <= startDate) {
-      toast.error("End date must be after start date.");
+      toast.error("End date must be after today.");
       return;
     }
 
@@ -122,26 +140,63 @@ export default function Books() {
       return;
     }
 
-    // Open payment modal after validation
+    // 🔒 Additional check for reservation only
+    if (!isBorrowing && book.endTime) {
+      const borrowEndDate = new Date(book.endTime);
+      if (endDate <= borrowEndDate) {
+        toast.error(
+          `Reservation must end after borrow period (${borrowEndDate.toLocaleDateString()})`
+        );
+        return;
+      }
+    }
+    setEndDates((prev) => ({ ...prev, [book._id]: endDate }));
     setSelectedBookForPayment(book);
     setShowPaymentModal(true);
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Blurred Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center filter blur-md"
         style={{ backgroundImage: "url('/bg-book.jpg')" }}
       />
       <div className="absolute inset-0 bg-black bg-opacity-50" />
       <div className="relative z-10 p-6">
-        <h2 className="text-2xl mb-4 font-semibold text-white drop-shadow">
-          {location ? `Books in ${location}` : "All Books"}
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="border rounded px-3 py-2 text-sm w-full sm:w-auto"
+          >
+            <option value="">All Categories</option>
+            <option value="Artificial Intelligence">
+              Artificial Intelligence
+            </option>
+            <option value="Machine Learning">Machine Learning</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Big Data">Big Data</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+            <option value="Software Engineering">Software Engineering</option>
+            <option value="Cloud Computing">Cloud Computing</option>
+          </select>
+          <h2 className="text-2xl font-semibold text-white drop-shadow mb-2 sm:mb-0">
+            {location ? `Books in ${location}` : "All Books"}
+          </h2>
+          <div className="relative w-full sm:w-56">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 rounded border"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredBooks.map((book: any) => {
-            const startDate = startDates[book._id];
             const endDate = endDates[book._id];
             const showPicker = openPickerFor === book._id;
 
@@ -152,9 +207,9 @@ export default function Books() {
               >
                 <div className="m-auto">
                   <img src="book.jpg" alt="Book Cover" className="mb-2" />
-                  <p className="font-bold text-lg">{book.title}</p>
-                  <p className="text-sm">{book.author}</p>
-                  <p className="text-sm">{book.genre}</p>
+                  <p className="font-bold text-lg">Title: {book.title}</p>
+                  <p className="text-sm">Author: {book.author}</p>
+                  <p className="text-sm">Category: {book.category}</p>
                   <p className="text-sm text-gray-500">Status: {book.status}</p>
                   {book.status === "borrowed" &&
                     book.startTime &&
@@ -196,61 +251,14 @@ export default function Books() {
 
                       {showPicker && (
                         <div className="mt-4 space-y-2">
-                          <div className="text-sm text-gray-700 mb-2">
-                            {startDate && (
-                              <p>
-                                <strong>Start:</strong>{" "}
-                                {startDate.toLocaleDateString()}
-                              </p>
-                            )}
-                            {endDate && (
-                              <p>
-                                <strong>End:</strong>{" "}
-                                {endDate.toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-
-                          <DatePicker
-                            selected={startDate}
-                            onChange={(date) =>
-                              setStartDates((prev) => ({
-                                ...prev,
-                                [book._id]: date,
-                              }))
-                            }
-                            selectsStart
-                            startDate={startDate}
-                            endDate={endDate}
-                            placeholderText="Start Date"
-                            dateFormat="yyyy-MM-dd"
-                            className="border px-2 py-1 rounded w-full"
-                            minDate={
-                              book.status === "borrowed" && book.endTime
-                                ? new Date(
-                                    new Date(book.endTime).getTime() +
-                                      24 * 60 * 60 * 1000
-                                  )
-                                : new Date()
-                            }
-                          />
-
-                          <DatePicker
-                            selected={endDate}
-                            onChange={(date) =>
-                              setEndDates((prev) => ({
-                                ...prev,
-                                [book._id]: date,
-                              }))
-                            }
-                            selectsEnd
-                            startDate={startDate}
-                            endDate={endDate}
-                            placeholderText="End Date"
-                            dateFormat="yyyy-MM-dd"
-                            className="border px-2 py-1 rounded w-full"
-                            minDate={startDate || new Date()}
-                          />
+                          <p className="text-sm text-gray-600">
+                            Duration:{" "}
+                            <span className="font-semibold">
+                              {categoryDurations[book.category] ||
+                                defaultDuration}{" "}
+                              days
+                            </span>
+                          </p>
 
                           <button
                             onClick={() => validateAndProceedToPayment(book)}
@@ -281,7 +289,6 @@ export default function Books() {
         </div>
       </div>
 
-      {/* Modal */}
       {selectedBookForPayment && (
         <PaymentModal
           isOpen={showPaymentModal}
@@ -297,6 +304,7 @@ export default function Books() {
           actionType={
             selectedBookForPayment?.status === "available" ? "borrow" : "renew"
           }
+          amount={0}
         />
       )}
     </div>

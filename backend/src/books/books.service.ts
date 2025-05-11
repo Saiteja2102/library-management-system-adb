@@ -137,7 +137,7 @@ export class BooksService {
         throw new BadRequestException("Reservation cannot exceed 28 days");
       }
 
-      if (book.endTime && start <= book.endTime) {
+      if (book.endTime && start < book.endTime) {
         throw new BadRequestException(
           "Reservation must start after current borrow period",
         );
@@ -232,6 +232,96 @@ export class BooksService {
     } catch (error) {
       throw new BadRequestException(error.message || "Something went wrong");
     }
+  }
+
+  async requestReturn(bookId: string, userId: Types.ObjectId) {
+    const book = await this.bookModel.findById(bookId);
+    if (!book) throw new NotFoundException("Book not found");
+
+    if (!book.borrowedBy || book.borrowedBy.toString() !== userId.toString()) {
+      throw new ForbiddenException("You did not borrow this book");
+    }
+
+    if (book.status !== AvailabilityStatus.Borrowed) {
+      throw new BadRequestException("Book is not currently borrowed");
+    }
+
+    const now = new Date();
+    const due = book.endTime ? new Date(book.endTime) : null;
+    if (due) {
+      let fine = 0;
+      if (now > due) {
+        const overdueDays = Math.ceil(
+          (now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        fine = overdueDays * 5; // e.g., ₹5 fine per day
+      }
+      book.status = "return_requested" as any;
+      await book.save();
+      return {
+        message: "Return request submitted. Awaiting admin approval.",
+        fineAmount: fine,
+        overdueDays:
+          fine > 0
+            ? Math.ceil((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24))
+            : 0,
+      };
+    }
+  }
+
+  async approveReturn(bookId: string) {
+    const book = await this.bookModel.findById(bookId);
+    if (!book) throw new NotFoundException("Book not found");
+
+    if (book.status !== AvailabilityStatus.ReturnRequested) {
+      throw new BadRequestException("Book is not in return request state");
+    }
+
+    const originalBorrowerId = book.borrowedBy;
+
+    book.status = AvailabilityStatus.Available;
+    book.borrowedBy = null;
+    book.startTime = null;
+    book.endTime = null;
+
+    // Check for reservation
+    if (book.reservedBy && book.reserveStartTime && book.reserveEndTime) {
+      // Auto-assign to reserved user
+      book.status = AvailabilityStatus.Borrowed;
+      book.borrowedBy = new Types.ObjectId(book.reservedBy as any);
+      book.startTime = book.reserveStartTime;
+      book.endTime = book.reserveEndTime;
+
+      // Clear reservation info
+      book.reservedBy = null as any;
+      book.reserveStartTime = null;
+      book.reserveEndTime = null;
+
+      // Log borrowing activity for reserved user
+      await this.userModel.findByIdAndUpdate(book.borrowedBy, {
+        $push: {
+          activityHistory: {
+            action: ActivityType.BORROW,
+            itemType: ItemType.BOOK,
+            itemId: book._id,
+            timestamp: new Date(),
+            meta: {
+              title: book.title,
+              autoBorrowed: true,
+            },
+          },
+        },
+      });
+    }
+
+    await book.save();
+
+    return {
+      message:
+        book.status === AvailabilityStatus.Borrowed
+          ? "Book returned and auto-borrowed by next reserved user."
+          : "Book return approved and marked available.",
+    };
   }
 
   async renewBook(

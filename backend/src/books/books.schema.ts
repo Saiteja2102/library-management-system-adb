@@ -9,6 +9,7 @@ export enum AvailabilityStatus {
   Borrowed = "borrowed",
   Reserved = "reserved",
   Lost = "lost",
+  ReturnRequested = "return_requested",
 }
 
 @Schema()
@@ -34,11 +35,20 @@ export class Book {
   @Prop({ required: true })
   location: string;
 
+  @Prop({ required: true })
+  publishedYear: string;
+
+  @Prop({ required: true })
+  numOfPages: number;
+
+  // @Prop({ required: true })
+  // image: number;
+
   @Prop({ enum: AvailabilityStatus, required: true })
   status: AvailabilityStatus;
 
   @Prop({ type: Types.ObjectId, ref: "User", default: null })
-  borrowedBy: Types.ObjectId;
+  borrowedBy: Types.ObjectId | null;
 
   // Changed from an array to a single reservedBy
   @Prop({ type: Types.ObjectId, ref: "User", default: null })

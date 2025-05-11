@@ -8,7 +8,9 @@ export interface Book {
   isbn: string;
   category: string;
   location: string;
-  status: "available" | "reserved" | "borrowed" | "lost";
+  status: "available" | "reserved" | "borrowed" | "lost" | "return_requested";
+  publishedYear: string;
+  numOfPages: number;
 }
 
 export interface DigitalResource {
@@ -19,4 +21,5 @@ export interface DigitalResource {
   category: string;
   fileUrl: string;
   cost: number;
+  publishedYear: number;
 }

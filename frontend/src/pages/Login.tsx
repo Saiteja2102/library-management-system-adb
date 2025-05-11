@@ -33,7 +33,7 @@ export default function Login() {
       if (decoded.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/");
+        navigate("/books");
       }
     } catch (err) {
       toast.error("Invalid credentials");
@@ -192,3 +192,31 @@ const styles: Record<string, React.CSSProperties> = {
     marginLeft: "135px",
   },
 };
+
+
+/*
+*Changes: *
+
+1. UI - Admin login page lo under manage books create category as top down list 
+
+2. _For books - _
+should have published year,   number of pages to be mentioned of a particular book, insert image for the the books 
+remove delete button
+Book ID should be unique( or Copy ID while adding a copy to new location) 
+
+3. Page - Manage ebooks: 
+# must have limited copies (1,2,3…4or 5)
+# remove the access if time has expired 
+# Digital resources ID validation (Books as well)
+
+4. Login page of new user
+~ need to add city, zip code
+~ Display category about Department (computer science, IT) for books
+~ Modify by title (A,B,C)
+~ do not define start date and end date by ourselves (remove that) and it should automatically defined by the system
+~ It should scan a book by ID or Category (ISBN) 
+~ The cost of books is free
+~ Paid amount should be displayed on the screen for lost books/late fee fines
+~ and the date of payment should also be displayed
+image for the book upload
+*/

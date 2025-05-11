@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PaymentModal from "../components/PaymentModal";
+import { Search } from "lucide-react";
 
 export interface DigitalResource {
   _id?: string;
@@ -13,6 +14,9 @@ export interface DigitalResource {
   category: string;
   fileUrl: string;
   cost: number;
+  publishedYear: string;
+  numOfPages: number;
+  availableCopies: number;
 }
 
 export default function DigitalResources() {
@@ -26,6 +30,7 @@ export default function DigitalResources() {
   const [bookedResourceIds, setBookedResourceIds] = useState<Set<string>>(
     new Set()
   );
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -44,7 +49,7 @@ export default function DigitalResources() {
   };
 
   const handleConfirmBooking = (res: DigitalResource) => {
-    const start = startDates[res._id!];
+    const start = new Date();
     const end = endDates[res._id!];
 
     if (
@@ -74,7 +79,7 @@ export default function DigitalResources() {
       await axios.post(
         `http://localhost:3001/digital-resources/${selectedResource._id}/borrow`,
         {
-          startTime: startDates[selectedResource._id!],
+          startTime: new Date(),
           endTime: endDates[selectedResource._id!],
         },
         {
@@ -86,7 +91,6 @@ export default function DigitalResources() {
 
       toast.success("E-Book booked successfully!");
 
-      // Add the resource ID to the booked set
       setBookedResourceIds((prev) => new Set(prev).add(selectedResource._id!));
     } catch (err: any) {
       console.error(err);
@@ -101,99 +105,133 @@ export default function DigitalResources() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Blurred Background Image */}
+      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center filter blur-md"
         style={{ backgroundImage: "url('/bg-ebook.jpg')" }}
       />
       <div className="absolute inset-0 bg-black bg-opacity-50" />
       <div className="relative z-10 p-6">
-        <h2 className="text-2xl mb-4 font-semibold text-white drop-shadow">
-          Digital Resources
-        </h2>
+        {/* Header and Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className="text-2xl font-semibold text-white drop-shadow mb-2 sm:mb-0">
+            Digital Resources
+          </h2>
+
+          <div className="relative w-full sm:w-56">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full pl-10 pr-3 py-2 rounded border"
+            />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+          </div>
+        </div>
+
+        {/* Grid of Resources */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {resources.map((res) => {
-            const showPicker = openPickerFor === res._id;
-            const start = startDates[res._id!];
-            const end = endDates[res._id!];
+          {resources
+            .filter((res) => {
+              const search = searchText.toLowerCase();
+              return (
+                res.title.toLowerCase().includes(search) ||
+                res.author.toLowerCase().includes(search) ||
+                res.category.toLowerCase().includes(search)
+              );
+            })
+            .map((res) => {
+              const showPicker = openPickerFor === res._id;
+              const start = startDates[res._id!];
+              const end = endDates[res._id!];
 
-            return (
-              <div
-                key={res._id}
-                className="border p-4 rounded shadow flex flex-col justify-between bg-white"
-              >
-                <div className="m-auto">
-                  <img
-                    src="ebook.jpg"
-                    alt="Resource"
-                    className="w-full h-32 object-cover rounded"
-                  />
-                  <p className="font-bold text-lg">{res.title}</p>
-                  <p className="text-sm">{res.author}</p>
-                  <p className="text-sm">{res.category}</p>
-                  <p className="text-sm text-gray-500">Cost: ${res.cost}</p>
+              return (
+                <div
+                  key={res._id}
+                  className="border p-4 rounded shadow flex flex-col justify-between bg-white"
+                >
+                  <div className="m-auto">
+                    <img
+                      src="ebook.jpg"
+                      alt="Resource"
+                      className="w-full h-32 object-cover rounded"
+                    />
+                    <p className="font-bold text-lg">{res.title}</p>
+                    <p className="text-sm">{res.author}</p>
+                    <p className="text-sm">{res.category}</p>
+                    <p className="text-sm text-gray-500">Cost: ${res.cost}</p>
+                  </div>
+
+                  <div className="mt-4">
+                    <button
+                      onClick={() => handleBookClick(res)}
+                      className={`${
+                        bookedResourceIds.has(res._id!) ||
+                        res.availableCopies === 0
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      } text-white px-4 py-2 rounded w-full`}
+                      disabled={
+                        bookedResourceIds.has(res._id!) ||
+                        res.availableCopies === 0
+                      }
+                    >
+                      {bookedResourceIds.has(res._id!)
+                        ? "Already Booked"
+                        : res.availableCopies === 0
+                        ? "Unavailable"
+                        : showPicker
+                        ? "Cancel"
+                        : "Book Now"}
+                    </button>
+
+                    {showPicker && !bookedResourceIds.has(res._id!) && (
+                      <div className="mt-4 space-y-2">
+                        {/* <DatePicker
+                          selected={start}
+                          onChange={(date) =>
+                            setStartDates((prev) => ({
+                              ...prev,
+                              [res._id!]: date,
+                            }))
+                          }
+                          selectsStart
+                          startDate={start}
+                          endDate={end}
+                          placeholderText="Start Date"
+                          dateFormat="yyyy-MM-dd"
+                          className="border px-2 py-1 rounded w-full"
+                          minDate={new Date()}
+                        /> */}
+                        <DatePicker
+                          selected={end}
+                          onChange={(date) =>
+                            setEndDates((prev) => ({
+                              ...prev,
+                              [res._id!]: date,
+                            }))
+                          }
+                          selectsEnd
+                          startDate={start}
+                          endDate={end}
+                          placeholderText="End Date"
+                          dateFormat="yyyy-MM-dd"
+                          className="border px-2 py-1 rounded w-full"
+                          minDate={new Date()}
+                        />
+                        <button
+                          onClick={() => handleConfirmBooking(res)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded w-full"
+                        >
+                          Confirm Booking
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                <div className="mt-4">
-                  <button
-                    onClick={() => handleBookClick(res)}
-                    className={`${
-                      bookedResourceIds.has(res._id!)
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-blue-500 hover:bg-blue-600"
-                    } text-white px-4 py-2 rounded w-full`}
-                    disabled={bookedResourceIds.has(res._id!)}
-                  >
-                    {bookedResourceIds.has(res._id!)
-                      ? "Already Booked"
-                      : showPicker
-                      ? "Cancel"
-                      : "Book Now"}
-                  </button>
-
-                  {showPicker && !bookedResourceIds.has(res._id!) && (
-                    <div className="mt-4 space-y-2">
-                      <DatePicker
-                        selected={start}
-                        onChange={(date) =>
-                          setStartDates((prev) => ({
-                            ...prev,
-                            [res._id!]: date,
-                          }))
-                        }
-                        selectsStart
-                        startDate={start}
-                        endDate={end}
-                        placeholderText="Start Date"
-                        dateFormat="yyyy-MM-dd"
-                        className="border px-2 py-1 rounded w-full"
-                        minDate={new Date()}
-                      />
-                      <DatePicker
-                        selected={end}
-                        onChange={(date) =>
-                          setEndDates((prev) => ({ ...prev, [res._id!]: date }))
-                        }
-                        selectsEnd
-                        startDate={start}
-                        endDate={end}
-                        placeholderText="End Date"
-                        dateFormat="yyyy-MM-dd"
-                        className="border px-2 py-1 rounded w-full"
-                        minDate={start || new Date()}
-                      />
-                      <button
-                        onClick={() => handleConfirmBooking(res)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded w-full"
-                      >
-                        Confirm Booking
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
 
         {/* Payment Modal */}
@@ -203,6 +241,7 @@ export default function DigitalResources() {
             onClose={() => setShowPaymentModal(false)}
             onSuccess={handlePaymentSuccess}
             actionType="borrow"
+            amount={0}
           />
         )}
       </div>

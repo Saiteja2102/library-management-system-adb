@@ -75,6 +75,12 @@ export class DigitalResourcesService {
       );
     }
 
+    if (book.availableCopies <= 0) {
+      throw new BadRequestException("No copies available for borrowing");
+    }
+
+    book.availableCopies -= 1;
+
     const alreadyBorrowed = book.borrowedBy.some((entry) => {
       return (
         entry.user.toString() === userId.toString() &&

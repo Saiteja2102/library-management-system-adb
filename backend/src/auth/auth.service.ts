@@ -19,6 +19,9 @@ interface JwtUserPayload {
   name: string;
   email: string;
   mobile: string;
+  city: string;
+  state: string;
+  zipcode: string;
 }
 
 @Injectable()
@@ -52,6 +55,9 @@ export class AuthService {
         name: user.name,
         email: user.email,
         mobile: user.mobile,
+        city: user.city,
+        state: user.state,
+        zipcode: user.zipcode
       };
       return this.login(payload);
     } catch (error) {
@@ -69,6 +75,9 @@ export class AuthService {
         name: user.name,
         email: user.email,
         mobile: user.mobile,
+        city: user.city,
+        state: user.state,
+        zipcode: user.zipcode
       };
     }
     throw new UnauthorizedException("Invalid credentials");

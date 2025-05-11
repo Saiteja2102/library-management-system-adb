@@ -42,6 +42,12 @@ export class DigitalResource {
 
   @Prop({ type: [BorrowInfoSchema], default: [] })
   borrowedBy: BorrowInfo[];
+  
+  @Prop({ type: Number, default: 1 })
+  numOfCopies: number;
+
+  @Prop({ type: Number, default: 1 })
+  availableCopies: number;
 }
 
 export const DigitalResourceSchema =

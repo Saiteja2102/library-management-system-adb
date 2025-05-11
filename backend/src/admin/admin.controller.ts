@@ -6,7 +6,8 @@ import {
   Param,
   Post,
   Put,
-  Patch
+  Patch,
+  BadRequestException,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { CreateBookDto } from "src/books/books.dto";
@@ -17,13 +18,17 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get("user-activity")
-   async getUserActivity() {
-     return await this.adminService.getUserActivity();
-   }
+  async getUserActivity() {
+    return await this.adminService.getUserActivity();
+  }
 
   @Post("create-book")
-  createBook(@Body() body: CreateBookDto) {
-    return this.adminService.createBook(body);
+  async createBook(@Body() data: CreateBookDto) {
+    try {
+      return await this.adminService.createBook(data);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 
   @Put("update-book/:id")
@@ -37,8 +42,12 @@ export class AdminController {
   }
 
   @Post("digital-resources")
-  createDigital(@Body() body: CreateDigitalResourceDto) {
-    return this.adminService.createDigitalResource(body);
+  async createDigital(@Body() data: CreateDigitalResourceDto) {
+    try {
+      return await this.adminService.createDigitalResource(data);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 
   @Put("digital-resources/:id")
@@ -65,8 +74,7 @@ export class AdminController {
   }
 
   @Patch("books/:id/add-copy")
-addBookCopy(@Param("id") id: string) {
-  return this.adminService.addBookCopy(id);
-}
-
+  addBookCopy(@Param("id") id: string, @Body("location") location: string) {
+    return this.adminService.addBookCopy(id, location);
+  }
 }

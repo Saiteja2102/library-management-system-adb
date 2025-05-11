@@ -21,7 +21,7 @@ export class AdminService {
 
   // BOOKS
   async getAllBooks() {
-    return this.bookModel.find();
+    return this.bookModel.find().populate('borrowedBy'); // fetch user details
   }
 
   async getUserActivity() {
@@ -31,6 +31,17 @@ export class AdminService {
   }
   async createBook(data: CreateBookDto) {
     try {
+
+      const existing = await this.bookModel.findOne({
+        bookId: data.bookId,
+        copyId: data.bookId, // This ensures we only check for the original
+      });
+  
+      if (existing) {
+        throw new Error("A book with this Book ID already exists.");
+      }
+
+
       const count = await this.bookModel.countDocuments({
         bookId: data.bookId,
       });
@@ -46,19 +57,23 @@ export class AdminService {
       return newBook;
     } catch (error) {
       console.error("Error creating book:", error);
+      throw new Error(error.message || "Failed to create book.");
     }
   }
 
-  async addBookCopy(bookId: string) {
+  async addBookCopy(bookId: string, location: string) {
     const original = await this.bookModel.findById(bookId);
     if (!original) throw new NotFoundException("Original book not found");
   
-    const copyCount = await this.bookModel.countDocuments({ bookId: original.bookId });
+    const copyCount = await this.bookModel.countDocuments({
+      bookId: original.bookId,
+    });
   
     const newCopy = new this.bookModel({
       ...original.toObject(),
       _id: undefined, // Let MongoDB assign a new ID
       copyId: `${original.bookId}-${copyCount}`,
+      location: location || original.location, // override if provided
       status: AvailabilityStatus.Available,
     });
   
@@ -82,7 +97,23 @@ export class AdminService {
 
   // DIGITAL RESOURCES
   async createDigitalResource(data: CreateDigitalResourceDto) {
-    return this.digitalModel.create(data);
+    try {
+      const exists = await this.digitalModel.findOne({
+        resourceId: data.resourceId,
+      });
+  
+      if (exists) {
+        throw new Error("A resource with this ID already exists.");
+      }
+  
+      return this.digitalModel.create({
+        ...data,
+        availableCopies: data.numOfCopies || 1,
+      });
+    } catch (error) {
+      console.error("Error creating digital resource:", error);
+      throw new Error(error.message || "Failed to create resource.");
+    }
   }
 
   async updateDigitalResource(

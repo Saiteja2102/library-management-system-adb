@@ -31,6 +31,9 @@ export function Section({
   const [prevEndTime, setPrevEndTime] = useState<Date | null>(null);
   const [showRenewPaymentModal, setShowRenewPaymentModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showFinePaymentModal, setShowFinePaymentModal] = useState(false);
+  const [fineAmount, setFineAmount] = useState(0);
+  const [returnBookId, setReturnBookId] = useState<string | null>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [lostBookId, setLostBookId] = useState<string | null>(null);
@@ -48,6 +51,31 @@ export function Section({
     setStartDate(null);
     setEndDate(null);
     setOpenModal(true);
+  };
+
+  const handleReturnRequest = async (bookId: string) => {
+    try {
+      const res = await axios.patch(
+        `http://localhost:3001/books/${bookId}/return`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const { message, fineAmount } = res.data;
+
+      if (fineAmount && fineAmount > 0) {
+        // 👉 show payment modal and collect fine first
+        setFineAmount(fineAmount);
+        setReturnBookId(bookId);
+        setShowFinePaymentModal(true);
+      } else {
+        toast.success(message);
+      }
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message || "Failed to submit return request";
+      toast.error(errorMsg);
+    }
   };
 
   const handleRenewSubmit = () => {
@@ -93,6 +121,8 @@ export function Section({
   };
 
   const handleLostPaymentConfirm = async () => {
+    console.log(lostBookId);
+
     if (!lostBookId) return;
     try {
       await axios.patch(
@@ -162,10 +192,16 @@ export function Section({
                   <div className="mt-4 flex justify-between gap-2">
                     <button
                       onClick={() => handleLost(book._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 disabled:opacity-50"
+                      className={`bg-red-500 text-white px-3 py-1 rounded disabled:opacity-50 ${
+                        book.status === "return_requested" ||
+                        book.status === "lost"
+                          ? "cursor-not-allowed"
+                          : "hover:bg-red-600"
+                      }`}
                       disabled={
                         disabledLostBooks.includes(book._id) ||
-                        book.status === "lost"
+                        book.status === "lost" ||
+                        book.status === "return_requested"
                       }
                     >
                       Lost
@@ -177,6 +213,7 @@ export function Section({
                         book.reservations?.length > 0 ||
                         book.status === "lost" ||
                         book.status === "reserved" ||
+                        book.status === "return_requested" ||
                         book.isRenewed
                           ? "bg-gray-400 cursor-not-allowed"
                           : "bg-blue-500 hover:bg-blue-600"
@@ -189,6 +226,21 @@ export function Section({
                       }
                     >
                       Renew
+                    </button>
+                    <button
+                      onClick={() => handleReturnRequest(book._id)}
+                      className={`bg-purple-600 text-white px-3 py-1 rounded disabled:opacity-50 ${
+                        book.status === "return_requested" ||
+                        book.status === "lost"
+                          ? "cursor-not-allowed"
+                          : "hover:bg-purple-700"
+                      }`}
+                      disabled={
+                        book.status === "return_requested" ||
+                        book.status === "lost"
+                      }
+                    >
+                      Return Book
                     </button>
                   </div>
                 </>
@@ -252,7 +304,7 @@ export function Section({
       )}
 
       {/* Payment Modals (Only for "borrowed") */}
-      {type === "borrowed" && (
+      {/* {type === "borrowed" && (
         <>
           <PaymentModal
             isOpen={showPaymentModal}
@@ -274,7 +326,23 @@ export function Section({
             actionType="renew"
           />
         </>
-      )}
+      )} */}
+
+      <PaymentModal
+        isOpen={showFinePaymentModal}
+        onClose={() => {
+          setShowFinePaymentModal(false);
+          setReturnBookId(null);
+        }}
+        onSuccess={async () => {
+          // Proceed to finalize the return
+          toast.success("Fine paid. Return request recorded.");
+          setShowFinePaymentModal(false);
+          setReturnBookId(null);
+        }}
+        amount={fineAmount}
+        actionType="fine"
+      />
 
       {showPdfModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

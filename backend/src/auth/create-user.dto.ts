@@ -4,6 +4,7 @@ import {
   IsMobilePhone,
   IsNotEmpty,
   MinLength,
+  IsString
 } from "class-validator";
 
 export enum UserRole {
@@ -28,4 +29,16 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsMobilePhone("en-IN")
   mobile: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  state: string;
+
+  @IsString()
+  @IsNotEmpty()
+  zipcode: string;
 }
